@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Greg Memory Book</title>
-  <script src=undefined></script>
+  <script src="undefined"></script>
   <style>
     :root {
       --brand: #1f3b5b;
@@ -482,6 +482,32 @@
       border-color: var(--brand);
     }
 
+    .photo-metadata {
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      border: 1px solid #dbe6f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .photo-metadata h4 {
+      margin: 0 0 8px 0;
+      font-size: 0.9rem;
+      color: var(--brand);
+    }
+
+    .metadata-inputs {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 8px;
+    }
+
+    .metadata-inputs input,
+    .metadata-inputs select {
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+
     @media (max-width: 760px) {
       .grid { grid-template-columns: 1fr; }
       .actions button { width: 100%; }
@@ -491,6 +517,7 @@
       .stats { grid-template-columns: 1fr 1fr; }
       .photo-gallery { grid-template-columns: repeat(2, 1fr); }
       .search-bar { flex-direction: column; }
+      .metadata-inputs { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -501,7 +528,7 @@
         <img src="https://assets.zyrosite.com/M5cgqRyg1MkOJXuF/greg-facebook-ktstBzwwnGyyAWTi.jpg" alt="Greg McCann" />
       </div>
       <div class="hero-content">
-        <h1>Greg McCann - a collection of memories</h1>
+        <h1>Greg McCann MSC - a collection of memories</h1>
         <p>Over the years, Greg has travelled to many countries and worked in many places across Australia. His life has been enriched by us all. Please share a memory, message, photo, or video that will jog his memory and warm his heart.</p>
         <div class="actions">
           <button class="primary" onclick="showPage('formPage')">Share a Memory</button>
@@ -546,15 +573,19 @@
           </select>
         </div>
         <div class="full">
+          <label for="whereMet">Where/when/How did you meet Greg?</label>
+          <input id="whereMet" placeholder="e.g., University, Work, Travel..." />
+        </div>
+        <div class="full">
           <label for="admireAbout">What words come to mind when you think of Greg?</label>
-          <textarea id="admireAbout" placeholder="kindness, sense of humour, friendship..."></textarea>
+          <textarea id="admireAbout" placeholder="kindness, sense of humor, friend..."></textarea>
         </div>
         <div class="full">
-          <label for="publicMessage">Things you have done</label>
-          <textarea id="publicMessage" required placeholder="Share a favourite memory, story, or message for Greg..."></textarea>
+          <label for="publicMessage">Good times</label>
+          <textarea id="publicMessage" required placeholder="Share memories, stories, or anything else with us all..."></textarea>
         </div>
         <div class="full">
-          <label for="favouriteMemory">Your Favourite Greg Story</label>
+          <label for="favouriteMemory">A favourite memory with Greg</label>
           <textarea id="favouriteMemory" placeholder="Tell us of a great memory..."></textarea>
         </div>
         <div class="full">
@@ -566,17 +597,7 @@
         <div class="full" id="mediaDetailsSection" style="display:none">
           <div class="card" style="background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);border-color:#dbe6f0">
             <h3>Photo Details</h3>
-            <label for="photoCaption">Photo Caption</label>
-            <input id="photoCaption" placeholder="Describe this photo..." />
-            <label for="photoCategory" style="margin-top:12px">Category</label>
-            <select id="photoCategory">
-              <option>Fun Times</option>
-              <option>Work</option>
-              <option>Family</option>
-              <option>Friends</option>
-              <option>Gatherings</option>
-              <option>Other</option>
-            </select>
+            <div id="photosMetadataList"></div>
           </div>
         </div>
         <div class="full">
@@ -610,7 +631,6 @@
 
         <div class="full actions">
           <button type="submit" class="primary">Share Memory</button>
-          <button type="button" class="secondary" onclick="notifyAdmin()">Notify Admin</button>
           <button type="button" class="secondary" onclick="clearForm()">Clear</button>
         </div>
       </form>
@@ -632,6 +652,10 @@
         <button class="filter-btn" onclick="filterMemories('recent')">Recent</button>
       </div>
 
+      <div class="actions">
+        <button class="secondary" onclick="notifyAdmin()">Report to Admin</button>
+      </div>
+
       <div id="publicList"></div>
     </section>
 
@@ -649,8 +673,8 @@
             <input id="photoTitle" placeholder="e.g., Trip to Europe 2023" />
           </div>
           <div class="full">
-            <label for="photoCaption">Caption</label>
-            <textarea id="photoCaption" style="min-height:80px;"></textarea>
+            <label for="photoDesc">Caption</label>
+            <textarea id="photoDesc" style="min-height:80px;"></textarea>
           </div>
           <div class="full">
             <label for="photoFile">Select Photo</label>
@@ -735,6 +759,7 @@
     let currentMediaIndex = null;
     let currentGregEmail = null;
     let selectedMediaFiles = [];
+    let mediaMetadata = [];
     let allMemories = [];
     let currentFilter = 'all';
     let userReactions = {};
@@ -833,6 +858,7 @@
       document.getElementById('memoryForm').reset();
       document.getElementById('formStatus').innerHTML = '';
       selectedMediaFiles = [];
+      mediaMetadata = [];
       updateMediaPreview();
     }
 
@@ -855,15 +881,48 @@
         html += `<button class="remove-media" onclick="removeMediaFile(${idx})">×</button></div>`;
       });
       document.getElementById('mediaPreview').innerHTML = html;
+      updateMetadataFields();
     }
+
+    function updateMetadataFields() {
+      let html = '';
+      selectedMediaFiles.forEach((file, idx) => {
+        const meta = mediaMetadata[idx] || { caption: '', category: '' };
+        html += `
+          <div class="photo-metadata">
+            <h4>📷 ${escapeHtml(file.name)}</h4>
+            <div class="metadata-inputs">
+              <input type="text" placeholder="Photo caption" value="${escapeHtml(meta.caption)}" onchange="updateMetadata(${idx}, 'caption', this.value)" />
+              <select onchange="updateMetadata(${idx}, 'category', this.value)">
+                <option value="">Select category</option>
+                <option ${meta.category === 'Fun times' ? 'selected' : ''}>Fun times</option>
+                <option ${meta.category === 'Relaxing' ? 'selected' : ''}>Relaxing</option>
+                <option ${meta.category === 'Family' ? 'selected' : ''}>Family</option>
+                <option ${meta.category === 'Friends' ? 'selected' : ''}>Friends</option>
+                <option ${meta.category === 'Celebration' ? 'selected' : ''}>Celebration</option>
+                <option ${meta.category === 'Other' ? 'selected' : ''}>Other</option>
+              </select>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('photosMetadataList').innerHTML = html;
+    }
+
+    window.updateMetadata = function(idx, field, value) {
+      if (!mediaMetadata[idx]) mediaMetadata[idx] = { caption: '', category: '' };
+      mediaMetadata[idx][field] = value;
+    };
 
     window.removeMediaFile = function(idx) {
       selectedMediaFiles.splice(idx, 1);
+      mediaMetadata.splice(idx, 1);
       updateMediaPreview();
     };
 
     document.getElementById('publicMedia').addEventListener('change', function() {
       selectedMediaFiles = Array.from(this.files);
+      mediaMetadata = selectedMediaFiles.map(() => ({ caption: '', category: '' }));
       updateMediaPreview();
     });
 
@@ -874,18 +933,18 @@
     function closeUploadForm() {
       document.getElementById('uploadPhotoForm').style.display = 'none';
       document.getElementById('photoTitle').value = '';
-      document.getElementById('photoCaption').value = '';
+      document.getElementById('photoDesc').value = '';
       document.getElementById('photoFile').value = '';
     }
 
     function notifyAdmin() {
-      alert('Admin notification sent! Thank you for letting us know about this memory.');
+      alert('Admin notification sent! Thank you for letting us know.');
     }
 
     async function uploadGregPhoto() {
       if (!ensureSupabaseConfigured()) return;
       const title = document.getElementById('photoTitle').value.trim();
-      const caption = document.getElementById('photoCaption').value.trim();
+      const caption = document.getElementById('photoDesc').value.trim();
       const file = document.getElementById('photoFile').files[0];
 
       if (!title || !file) {
@@ -1188,6 +1247,7 @@
 
         document.getElementById('name').value = data.name || '';
         document.getElementById('relationship').value = data.relationship || '';
+        document.getElementById('whereMet').value = data.where_met || '';
         document.getElementById('admireAbout').value = data.admire_about || '';
         document.getElementById('publicMessage').value = data.public_message || '';
         document.getElementById('favouriteMemory').value = data.favourite_memory || '';
@@ -1209,6 +1269,7 @@
 
       const name = document.getElementById('name').value.trim();
       const relationship = document.getElementById('relationship').value;
+      const whereMet = document.getElementById('whereMet').value.trim();
       const admireAbout = document.getElementById('admireAbout').value.trim();
       const publicMessage = document.getElementById('publicMessage').value.trim();
       const favouriteMemory = document.getElementById('favouriteMemory').value.trim();
@@ -1217,8 +1278,6 @@
       const phone = document.getElementById('phoneNumber').value.trim();
       const contactAllowed = document.getElementById('contactAllowed').checked;
       const groupUpdatesAllowed = document.getElementById('groupUpdatesAllowed').checked;
-      const photoCaption = document.getElementById('photoCaption').value.trim();
-      const photoCategory = document.getElementById('photoCategory').value;
 
       if (!name || !publicMessage) {
         alert('Please fill in required fields');
@@ -1228,15 +1287,17 @@
       try {
         let publicMediaArray = [];
         
-        for (const file of selectedMediaFiles) {
+        for (let i = 0; i < selectedMediaFiles.length; i++) {
+          const file = selectedMediaFiles[i];
+          const meta = mediaMetadata[i];
           const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${file.name.split('.').pop()}`;
           const { error: uploadError } = await supabaseClient.storage.from('public-media').upload(`media/${fileName}`, file);
           if (uploadError) throw uploadError;
           
           publicMediaArray.push({
             path: `media/${fileName}`,
-            caption: photoCaption,
-            category: photoCategory,
+            caption: meta.caption,
+            category: meta.category,
             type: file.type
           });
         }
@@ -1244,6 +1305,7 @@
         const { error } = await supabaseClient.from('submissions').insert([{
           name, 
           relationship,
+          where_met: whereMet,
           admire_about: admireAbout,
           public_message: publicMessage,
           favourite_memory: favouriteMemory,
@@ -1337,6 +1399,7 @@
     window.searchMemories = searchMemories;
     window.toggleReaction = toggleReaction;
     window.toggleFavorite = toggleFavorite;
+    window.updateMetadata = updateMetadata;
 
     // Initialize everything
     (async () => {
