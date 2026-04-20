@@ -1,0 +1,1348 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greg Memory Book</title>
+  <script src=undefined></script>
+  <style>
+    :root {
+      --brand: #1f3b5b;
+      --brand2: #31557d;
+      --brand3: #5f7ea3;
+      --soft: #eef3f8;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --ok: #027a48;
+      --warn: #b54708;
+      --err: #b42318;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.1);
+      --shadow-soft: 0 8px 24px rgba(17, 24, 39, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: radial-gradient(circle at top left, rgba(95, 126, 163, 0.12), transparent 28%), linear-gradient(180deg, #f7f4ef 0%, #f3f6f9 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1040px;
+      margin: 28px auto;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 40px 28px 30px;
+      background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 30%), linear-gradient(135deg, var(--brand) 0%, var(--brand2) 58%, var(--brand3) 100%);
+      color: #fff;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .hero-image {
+      flex-shrink: 0;
+      width: 180px;
+      height: 180px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      border: 4px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-content { flex: 1; }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.02;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      opacity: 0.94;
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .page { display: none; padding: 26px; }
+    .page.active { display: block; }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .card, .notice, .stat, .memory {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .notice {
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    .ok { color: var(--ok); font-weight: 700; }
+    .warn { color: var(--warn); font-weight: 700; }
+    .err { color: var(--err); font-weight: 700; }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--brand);
+      font-size: 1.45rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 16px 0 12px;
+      color: var(--brand);
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 7px;
+      color: var(--brand);
+      font-size: 0.95rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #d8dee6;
+      border-radius: 16px;
+      font: inherit;
+      background: #fcfdff;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #9fb4cb;
+      box-shadow: 0 0 0 4px rgba(95, 126, 163, 0.16);
+    }
+
+    textarea { min-height: 120px; resize: vertical; }
+    .muted { color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+    .hidden { display: none; }
+
+    button, .pick {
+      border: none;
+      border-radius: 16px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
+      transition: all 0.16s ease;
+    }
+
+    button:hover, .pick:hover { transform: translateY(-1px); }
+
+    .primary { background: var(--brand); color: #fff; }
+    .secondary { background: #fff; color: var(--brand); border: 1px solid #d6dee8; }
+    .soft { background: var(--soft); color: var(--brand); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .stat { background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%); }
+    .num { display: block; font-size: 1.55rem; font-weight: 800; color: var(--brand); margin-bottom: 4px; }
+
+    .photo-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .photo-card {
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f8fafc;
+      box-shadow: var(--shadow-soft);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .photo-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(17, 24, 39, 0.12);
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .category-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 14px;
+      background: var(--soft);
+      color: var(--brand);
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .memory { padding: 18px; margin-bottom: 20px; }
+    .name { font-weight: 800; color: var(--brand); font-size: 1.05rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
+    .copy { margin-top: 10px; white-space: pre-wrap; line-height: 1.7; }
+
+    .comments-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .comment-item {
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-left: 3px solid var(--brand);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .comment-author {
+      font-weight: 700;
+      color: var(--brand);
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+    }
+
+    .comment-text {
+      color: var(--text);
+      word-wrap: break-word;
+    }
+
+    .photo-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .photo-modal.active { display: flex; }
+
+    .photo-modal-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .photo-modal-image {
+      max-width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
+    }
+
+    .photo-modal-details {
+      padding: 20px;
+      max-height: 30vh;
+      overflow-y: auto;
+    }
+
+    .photo-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border: none;
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .comment-header {
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--brand);
+    }
+
+    .comments-thread {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .media-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .preview-thumbnail {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f0f0f0;
+      height: 100px;
+    }
+
+    .preview-thumbnail img, .preview-thumbnail video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-media {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      margin: 0;
+      font-weight: 400;
+      font-size: 0.95rem;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      flex: 1;
+    }
+
+    .memory-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .reaction-btn {
+      background: #f0f0f0;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .reaction-btn:hover {
+      background: var(--soft);
+    }
+
+    .reaction-btn.active {
+      background: var(--brand);
+      color: white;
+      border-color: var(--brand);
+    }
+
+    .favorite-btn {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: all 0.2s ease;
+    }
+
+    .favorite-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .favorite-badge {
+      display: inline-block;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: #f0f0f0;
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 8px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn.active {
+      background: var(--brand);
+      color: white;
+      border-color: var(--brand);
+    }
+
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr; }
+      .actions button { width: 100%; }
+      .page { padding: 18px; }
+      .hero { padding: 30px 20px 24px; flex-direction: column; }
+      .hero-image { width: 140px; height: 140px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .photo-gallery { grid-template-columns: repeat(2, 1fr); }
+      .search-bar { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-image">
+        <img src="https://assets.zyrosite.com/M5cgqRyg1MkOJXuF/greg-facebook-ktstBzwwnGyyAWTi.jpg" alt="Greg McCann" />
+      </div>
+      <div class="hero-content">
+        <h1>Greg McCann - a collection of memories</h1>
+        <p>Over the years, Greg has travelled to many countries and worked in many places across Australia. His life has been enriched by us all. Please share a memory, message, photo, or video that will jog his memory and warm his heart.</p>
+        <div class="actions">
+          <button class="primary" onclick="showPage('formPage')">Share a Memory</button>
+          <button class="secondary" onclick="showPage('wallPage')">View Memories</button>
+          <button class="soft" onclick="showPage('albumPage')">Greg's Photos</button>
+          <button class="soft" onclick="showPage('editPage')">Edit Your Memory</button>
+          <button class="soft" onclick="showPage('loginPage')">Greg Login</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="page active" id="homePage">
+      <div class="card" style="margin-bottom:16px;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)">
+        <div style="font-size:1.15rem;font-weight:800;color:var(--brand);margin-bottom:6px">Help celebrate Greg</div>
+        <div class="muted">Share this link with anyone that knows Greg to share memories, photos, and videos.</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="num" id="statPublic">0</span>Public memories</div>
+        <div class="stat"><span class="num" id="statPrivate">0</span>Private messages</div>
+        <div class="stat"><span class="num" id="statMedia">0</span>Files uploaded</div>
+        <div class="stat"><span class="num" id="statContacts">0</span>Contributors</div>
+      </div>
+    </section>
+
+    <section class="page" id="formPage">
+      <div class="actions"><button class="secondary" onclick="showPage('homePage')">Back</button></div>
+      <h2>Share a Memory</h2>
+      <div id="formStatus"></div>
+      <form id="memoryForm" class="grid">
+        <div>
+          <label for="name">Your Name</label>
+          <input id="name" required />
+        </div>
+        <div>
+          <label for="relationship">Relationship</label>
+          <select id="relationship">
+            <option>Family</option>
+            <option>Friend</option>
+            <option>Colleague</option>
+            <option>Student</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="full">
+          <label for="admireAbout">What words come to mind when you think of Greg?</label>
+          <textarea id="admireAbout" placeholder="kindness, sense of humour, friendship..."></textarea>
+        </div>
+        <div class="full">
+          <label for="publicMessage">Things you have done</label>
+          <textarea id="publicMessage" required placeholder="Share a favourite memory, story, or message for Greg..."></textarea>
+        </div>
+        <div class="full">
+          <label for="favouriteMemory">Your Favourite Greg Story</label>
+          <textarea id="favouriteMemory" placeholder="Tell us of a great memory..."></textarea>
+        </div>
+        <div class="full">
+          <label for="publicMedia">Photos or Videos</label>
+          <input id="publicMedia" type="file" accept="image/*,video/*" multiple />
+          <div class="muted" id="mediaCount" style="margin-top: 8px;">No files selected</div>
+          <div class="media-preview" id="mediaPreview"></div>
+        </div>
+        <div class="full" id="mediaDetailsSection" style="display:none">
+          <div class="card" style="background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);border-color:#dbe6f0">
+            <h3>Photo Details</h3>
+            <label for="photoCaption">Photo Caption</label>
+            <input id="photoCaption" placeholder="Describe this photo..." />
+            <label for="photoCategory" style="margin-top:12px">Category</label>
+            <select id="photoCategory">
+              <option>Fun Times</option>
+              <option>Work</option>
+              <option>Family</option>
+              <option>Friends</option>
+              <option>Gatherings</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="full">
+          <label for="privateMessage">Private message to Greg</label>
+          <textarea id="privateMessage" placeholder="A personal note just for Greg..."></textarea>
+        </div>
+
+        <div class="full card" style="background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);border-color:#dbe6f0">
+          <div style="font-weight:800;color:var(--brand);margin-bottom:14px">Contact Details</div>
+          <div>
+            <label for="emailAddress">Email address</label>
+            <input id="emailAddress" type="email" />
+          </div>
+          <div style="margin-top:12px">
+            <label for="phoneNumber">Phone number</label>
+            <input id="phoneNumber" type="tel" />
+          </div>
+
+          <h3 style="margin-top:16px">Can Greg contact you in the future?</h3>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input id="contactAllowed" type="checkbox" />
+              <label for="contactAllowed">Greg may contact me directly</label>
+            </div>
+            <div class="checkbox-item">
+              <input id="groupUpdatesAllowed" type="checkbox" checked />
+              <label for="groupUpdatesAllowed">Send group updates</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="full actions">
+          <button type="submit" class="primary">Share Memory</button>
+          <button type="button" class="secondary" onclick="notifyAdmin()">Notify Admin</button>
+          <button type="button" class="secondary" onclick="clearForm()">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="page" id="wallPage">
+      <div class="actions"><button class="secondary" onclick="showPage('homePage')">Back</button></div>
+      <h2>Memory Wall</h2>
+      <div id="wallStatus"></div>
+      
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name or keywords..." />
+        <button class="primary" onclick="searchMemories()">Search</button>
+      </div>
+
+      <div class="filter-buttons">
+        <button class="filter-btn active" onclick="filterMemories('all')">All</button>
+        <button class="filter-btn" onclick="filterMemories('favorites')">⭐ Favorites</button>
+        <button class="filter-btn" onclick="filterMemories('recent')">Recent</button>
+      </div>
+
+      <div id="publicList"></div>
+    </section>
+
+    <section class="page" id="albumPage">
+      <div class="actions"><button class="secondary" onclick="showPage('homePage')">Back</button></div>
+      <h2>Greg's Photo Album</h2>
+      <div class="actions">
+        <button class="primary" type="button" onclick="openUploadForm()">+ Add Photos</button>
+      </div>
+      <div id="uploadPhotoForm" style="display:none" class="card" style="margin-top:16px">
+        <h3>Upload Photos</h3>
+        <div class="grid">
+          <div class="full">
+            <label for="photoTitle">Photo Title</label>
+            <input id="photoTitle" placeholder="e.g., Trip to Europe 2023" />
+          </div>
+          <div class="full">
+            <label for="photoCaption">Caption</label>
+            <textarea id="photoCaption" style="min-height:80px;"></textarea>
+          </div>
+          <div class="full">
+            <label for="photoFile">Select Photo</label>
+            <input id="photoFile" type="file" accept="image/*" />
+          </div>
+          <div class="full actions">
+            <button type="button" class="primary" onclick="uploadGregPhoto()">Upload Photo</button>
+            <button type="button" class="secondary" onclick="closeUploadForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div id="photoGallery"></div>
+    </section>
+
+    <section class="page" id="editPage">
+      <div class="actions"><button class="secondary" onclick="showPage('homePage')">Back</button></div>
+      <h2>Edit Your Memory</h2>
+      <div class="card" style="margin-bottom:16px">
+        <label for="searchName">Your Name</label>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <input id="searchName" placeholder="Enter the name you posted with" />
+          <button class="primary" type="button" onclick="searchMyMemories()">Search</button>
+        </div>
+      </div>
+      <div id="myMemoriesList"></div>
+    </section>
+
+    <section class="page" id="loginPage">
+      <div class="actions"><button class="secondary" onclick="showPage('homePage')">Back</button></div>
+      <h2>Greg Login</h2>
+      <div id="loginStatus"></div>
+      <div class="card">
+        <label for="gregEmail">Email</label>
+        <input id="gregEmail" type="email" />
+        <label for="gregPassword" style="margin-top:12px">Password</label>
+        <input id="gregPassword" type="password" />
+        <div class="actions">
+          <button class="primary" type="button" id="signInBtn">Sign In</button>
+          <button class="secondary" type="button" id="signOutBtn">Sign Out</button>
+        </div>
+      </div>
+      <div id="gregVaultButton"></div>
+    </section>
+
+    <section class="page" id="vaultPage">
+      <div class="actions"><button class="secondary" onclick="showPage('homePage')">Back</button></div>
+      <h2>Private Vault</h2>
+      <div id="privateList"></div>
+    </section>
+  </div>
+
+  <!-- Photo Modal -->
+  <div class="photo-modal" id="photoModal">
+    <div class="photo-modal-content">
+      <button class="photo-modal-close" onclick="closePhotoModal()">&times;</button>
+      <img id="photoModalImage" class="photo-modal-image" src="" alt="photo" />
+      <div class="photo-modal-details">
+        <h3 id="photoModalCaption"></h3>
+        <div id="photoModalCategory"></div>
+        <div class="comments-section">
+          <div class="comment-header" id="commentHeader">Comments</div>
+          <div class="comments-thread" id="photoModalComments"></div>
+          <div style="display: flex; gap: 8px; flex-direction: column;">
+            <input type="text" id="commentAuthor" placeholder="Your name" />
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="commentText" placeholder="Add a comment..." style="flex: 1;" />
+              <button type="button" class="primary" onclick="submitPhotoComment()" style="flex-shrink: 0; padding: 8px 12px;">Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://zmoxcwlurmujctdyidxu.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_vVxJun0zJ_WPWm0wR6bl3g_2QhgOf7l';
+
+    let supabaseClient = null;
+    let currentPhotoId = null;
+    let currentSubmissionId = null;
+    let currentMediaIndex = null;
+    let currentGregEmail = null;
+    let selectedMediaFiles = [];
+    let allMemories = [];
+    let currentFilter = 'all';
+    let userReactions = {};
+    let userFavorites = new Set();
+    let db = null;
+
+    // IndexedDB initialization
+    async function initIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('GregMemoryBook', 1);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('reactions')) {
+            db.createObjectStore('reactions', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('favorites')) {
+            db.createObjectStore('favorites', { keyPath: 'id' });
+          }
+        };
+      });
+    }
+
+    // Save data to IndexedDB
+    async function saveToIndexedDB(storeName, data) {
+      if (!db) return;
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.put(data);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // Load data from IndexedDB
+    async function loadFromIndexedDB(storeName) {
+      if (!db) return [];
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // Initialize storage
+    async function initStorage() {
+      try {
+        await initIndexedDB();
+        const reactions = await loadFromIndexedDB('reactions');
+        const favorites = await loadFromIndexedDB('favorites');
+        
+        reactions.forEach(r => userReactions[r.id] = r.value);
+        favorites.forEach(f => userFavorites.add(f.id));
+      } catch (error) {
+        console.log('IndexedDB not available, using session storage');
+      }
+    }
+
+    function statusBox(message, type = 'success') {
+      const kind = type === 'error' ? 'err' : type === 'warning' ? 'warn' : 'ok';
+      return `<div class="notice ${kind}">${message}</div>`;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (id === 'wallPage') loadPublicMemories();
+      if (id === 'albumPage') loadGregPhotos();
+      if (id === 'vaultPage') loadPrivateVault();
+    }
+
+    function ensureSupabaseConfigured() {
+      if (!window.supabase) return false;
+      if (!supabaseClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      return true;
+    }
+
+    function clearForm() {
+      document.getElementById('memoryForm').reset();
+      document.getElementById('formStatus').innerHTML = '';
+      selectedMediaFiles = [];
+      updateMediaPreview();
+    }
+
+    function updateMediaPreview() {
+      const count = selectedMediaFiles.length;
+      document.getElementById('mediaCount').textContent = count > 0 ? `${count} file(s) selected` : 'No files selected';
+      document.getElementById('mediaDetailsSection').style.display = count > 0 ? 'block' : 'none';
+      
+      let html = '';
+      selectedMediaFiles.forEach((file, idx) => {
+        const isImage = file.type.startsWith('image/');
+        const isVideo = file.type.startsWith('video/');
+        html += `<div class="preview-thumbnail">`;
+        if (isImage) {
+          const url = URL.createObjectURL(file);
+          html += `<img src="${url}" alt="preview" />`;
+        } else if (isVideo) {
+          html += `<video><source src="${URL.createObjectURL(file)}" /></video>`;
+        }
+        html += `<button class="remove-media" onclick="removeMediaFile(${idx})">×</button></div>`;
+      });
+      document.getElementById('mediaPreview').innerHTML = html;
+    }
+
+    window.removeMediaFile = function(idx) {
+      selectedMediaFiles.splice(idx, 1);
+      updateMediaPreview();
+    };
+
+    document.getElementById('publicMedia').addEventListener('change', function() {
+      selectedMediaFiles = Array.from(this.files);
+      updateMediaPreview();
+    });
+
+    function openUploadForm() {
+      document.getElementById('uploadPhotoForm').style.display = 'block';
+    }
+
+    function closeUploadForm() {
+      document.getElementById('uploadPhotoForm').style.display = 'none';
+      document.getElementById('photoTitle').value = '';
+      document.getElementById('photoCaption').value = '';
+      document.getElementById('photoFile').value = '';
+    }
+
+    function notifyAdmin() {
+      alert('Admin notification sent! Thank you for letting us know about this memory.');
+    }
+
+    async function uploadGregPhoto() {
+      if (!ensureSupabaseConfigured()) return;
+      const title = document.getElementById('photoTitle').value.trim();
+      const caption = document.getElementById('photoCaption').value.trim();
+      const file = document.getElementById('photoFile').files[0];
+
+      if (!title || !file) {
+        alert('Please fill in title and select a photo');
+        return;
+      }
+
+      try {
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${file.name.split('.').pop()}`;
+        const { error: uploadError } = await supabaseClient.storage.from('greg-photos').upload(`photos/${fileName}`, file);
+        if (uploadError) throw uploadError;
+
+        const { error: insertError } = await supabaseClient.from('greg_photos').insert([{
+          title, caption, photo_path: `photos/${fileName}`
+        }]);
+        if (insertError) throw insertError;
+
+        closeUploadForm();
+        await loadGregPhotos();
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    async function loadGregPhotos() {
+      try {
+        if (!ensureSupabaseConfigured()) throw new Error('Service not available');
+        const { data, error } = await supabaseClient.from('greg_photos').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+
+        let html = '';
+        if (!data || data.length === 0) {
+          html = '<div class="card">No photos yet.</div>';
+        } else {
+          html = '<div class="photo-gallery">';
+          data.forEach(photo => {
+            const url = supabaseClient.storage.from('greg-photos').getPublicUrl(photo.photo_path).data.publicUrl;
+            html += `<div class="photo-card" onclick="openPhotoModal(${photo.id}, '${escapeHtml(photo.caption || '')}', '${url}', null, null, null)"><img src="${url}" alt="${escapeHtml(photo.title)}" /></div>`;
+          });
+          html += '</div>';
+        }
+        document.getElementById('photoGallery').innerHTML = html;
+      } catch (error) {
+        console.error('Error loading photos:', error);
+      }
+    }
+
+    function openPhotoModal(photoId, caption, imageUrl, submissionId, mediaIndex, category) {
+      currentPhotoId = photoId;
+      currentSubmissionId = submissionId;
+      currentMediaIndex = mediaIndex;
+      document.getElementById('photoModalCaption').textContent = caption;
+      document.getElementById('photoModalImage').src = imageUrl;
+      document.getElementById('commentAuthor').value = '';
+      document.getElementById('commentText').value = '';
+      
+      if (category) {
+        document.getElementById('photoModalCategory').innerHTML = `<span class="category-tag">${escapeHtml(category)}</span>`;
+      } else {
+        document.getElementById('photoModalCategory').innerHTML = '';
+      }
+      
+      loadPhotoComments(photoId, submissionId, mediaIndex);
+      document.getElementById('photoModal').classList.add('active');
+    }
+
+    function closePhotoModal() {
+      document.getElementById('photoModal').classList.remove('active');
+    }
+
+    async function loadPhotoComments(photoId, submissionId, mediaIndex) {
+      try {
+        if (!ensureSupabaseConfigured()) return;
+        
+        let data = [];
+        if (photoId) {
+          const result = await supabaseClient.from('greg_photo_comments').select('*').eq('photo_id', photoId).order('created_at', { ascending: true });
+          if (!result.error) data = result.data || [];
+        } else if (submissionId !== null && mediaIndex !== null) {
+          const result = await supabaseClient.from('submission_photo_comments').select('*').eq('submission_id', submissionId).eq('photo_index', mediaIndex).order('created_at', { ascending: true });
+          if (!result.error) data = result.data || [];
+        }
+
+        let html = '';
+        document.getElementById('commentHeader').textContent = `${data.length} comment${data.length !== 1 ? 's' : ''}`;
+        
+        if (data.length > 0) {
+          data.forEach(comment => {
+            html += `
+              <div class="comment-item">
+                <div class="comment-author">${escapeHtml(comment.author_name)}</div>
+                <div class="comment-text">${escapeHtml(comment.comment_text)}</div>
+              </div>
+            `;
+          });
+        } else {
+          html = '<p style="color: var(--muted); font-size: 0.9rem;">No comments yet. Be the first!</p>';
+        }
+        document.getElementById('photoModalComments').innerHTML = html;
+      } catch (error) {
+        console.error('Error loading comments:', error);
+      }
+    }
+
+    async function submitPhotoComment() {
+      if (!ensureSupabaseConfigured()) return;
+      const author = document.getElementById('commentAuthor').value.trim();
+      const text = document.getElementById('commentText').value.trim();
+
+      if (!author || !text) {
+        alert('Please enter your name and a comment');
+        return;
+      }
+
+      try {
+        if (currentPhotoId) {
+          await supabaseClient.from('greg_photo_comments').insert([{
+            photo_id: currentPhotoId, author_name: author, comment_text: text
+          }]);
+        } else {
+          await supabaseClient.from('submission_photo_comments').insert([{
+            submission_id: currentSubmissionId, photo_index: currentMediaIndex, author_name: author, comment_text: text
+          }]);
+        }
+        document.getElementById('commentAuthor').value = '';
+        document.getElementById('commentText').value = '';
+        await loadPhotoComments(currentPhotoId, currentSubmissionId, currentMediaIndex);
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    async function loadPublicMemories() {
+      try {
+        if (!ensureSupabaseConfigured()) throw new Error('Service not available');
+        const { data, error } = await supabaseClient.from('submissions').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+
+        allMemories = data || [];
+        currentFilter = 'all';
+        updateFilterButtons();
+        renderMemories(allMemories);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function filterMemories(filter) {
+      currentFilter = filter;
+      updateFilterButtons();
+      
+      let filtered = allMemories;
+      if (filter === 'favorites') {
+        filtered = allMemories.filter(m => userFavorites.has(m.id));
+      } else if (filter === 'recent') {
+        filtered = [...allMemories].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+      
+      renderMemories(filtered);
+    }
+
+    function updateFilterButtons() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(currentFilter) || 
+            (currentFilter === 'all' && btn.textContent.toLowerCase().includes('all'))) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    function renderMemories(memories) {
+      let html = '';
+      if (!memories || memories.length === 0) {
+        html = '<div class="card">No memories found.</div>';
+      } else {
+        memories.forEach((item) => {
+          const isFavorite = userFavorites.has(item.id);
+          html += `<div class="memory">`;
+          html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="name">${escapeHtml(item.name)}${isFavorite ? '<span class="favorite-badge">⭐ Favorite</span>' : ''}</div>
+              <div class="meta">${escapeHtml(item.relationship || '')}</div>
+            </div>
+            <button class="favorite-btn" onclick="toggleFavorite(${item.id})" title="Add to favorites">${isFavorite ? '⭐' : '☆'}</button>
+          </div>`;
+          
+          if (item.where_met) html += `<div class="meta" style="font-size:0.85rem;margin-top:6px">Met: ${escapeHtml(item.where_met)}</div>`;
+          if (item.admire_about) html += `<div class="meta" style="font-size:0.85rem;margin-top:4px">Words: ${escapeHtml(item.admire_about)}</div>`;
+          html += `<div class="copy">${escapeHtml(item.public_message)}</div>`;
+          
+          if (item.favourite_memory) {
+            html += `<div style="margin-top:10px;padding:12px;background:#fffbf0;border-left:4px solid #f59e0b;border-radius:8px;font-size:0.9rem;line-height:1.5;"><div style="font-weight:700;color:#d97706;margin-bottom:6px">✨ Favourite Memory</div>${escapeHtml(item.favourite_memory)}</div>`;
+          }
+
+          if (item.public_media && Array.isArray(item.public_media) && item.public_media.length > 0) {
+            html += `<div class="photo-gallery">`;
+            item.public_media.forEach((media, mediaIdx) => {
+              if (media && media.path) {
+                const url = supabaseClient.storage.from('public-media').getPublicUrl(media.path).data.publicUrl;
+                const category = media.category || null;
+                html += `<div class="photo-card" onclick="openPhotoModal(null, '${escapeHtml(media.caption || '')}', '${url}', ${item.id}, ${mediaIdx}, '${escapeHtml(category || '')}')"><img src="${url}" alt="memory" /></div>`;
+              }
+            });
+            html += `</div>`;
+            
+            if (item.public_media.some(m => m.category)) {
+              html += `<div style="margin-top:10px;">`;
+              item.public_media.forEach((media) => {
+                if (media.category) {
+                  html += `<span class="category-tag">${escapeHtml(media.category)}</span>`;
+                }
+              });
+              html += `</div>`;
+            }
+          }
+
+          html += `<div class="memory-actions">`;
+          const reactions = ['❤️', '😊', '😂', '🥺', '👏', '🙌'];
+          reactions.forEach(reaction => {
+            const key = `${item.id}-${reaction}`;
+            const isActive = userReactions[key] || false;
+            html += `<button class="reaction-btn ${isActive ? 'active' : ''}" onclick="toggleReaction(${item.id}, '${reaction}')">${reaction}</button>`;
+          });
+          html += `</div>`;
+
+          html += `</div>`;
+        });
+      }
+
+      document.getElementById('publicList').innerHTML = html;
+    }
+
+    async function toggleReaction(memoryId, reaction) {
+      const key = `${memoryId}-${reaction}`;
+      userReactions[key] = !userReactions[key];
+      await saveToIndexedDB('reactions', { id: key, value: userReactions[key] });
+      filterMemories(currentFilter);
+    }
+
+    async function toggleFavorite(memoryId) {
+      if (userFavorites.has(memoryId)) {
+        userFavorites.delete(memoryId);
+      } else {
+        userFavorites.add(memoryId);
+      }
+      await saveToIndexedDB('favorites', { id: memoryId });
+      filterMemories(currentFilter);
+    }
+
+    function searchMemories() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!searchTerm) {
+        filterMemories('all');
+        return;
+      }
+
+      const filtered = allMemories.filter(memory => 
+        memory.name.toLowerCase().includes(searchTerm) ||
+        memory.public_message.toLowerCase().includes(searchTerm) ||
+        memory.favourite_memory?.toLowerCase().includes(searchTerm) ||
+        memory.admire_about?.toLowerCase().includes(searchTerm)
+      );
+      
+      renderMemories(filtered);
+    }
+
+    async function searchMyMemories() {
+      const searchName = document.getElementById('searchName').value.trim();
+      if (!searchName) {
+        alert('Please enter your name');
+        return;
+      }
+
+      try {
+        if (!ensureSupabaseConfigured()) return;
+        const { data } = await supabaseClient.from('submissions').select('*').eq('name', searchName);
+        if (!data || data.length === 0) {
+          document.getElementById('myMemoriesList').innerHTML = '<div class="card">No memories found</div>';
+          return;
+        }
+
+        let html = '';
+        data.forEach(memory => {
+          html += `<div class="card" style="margin-bottom: 12px;"><div style="font-weight:700">${escapeHtml(memory.public_message.substring(0, 50))}</div><button class="primary" style="margin-top:10px;padding:8px 14px;font-size:0.9rem" onclick="editSubmission(${memory.id})">Edit</button></div>`;
+        });
+        document.getElementById('myMemoriesList').innerHTML = html;
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function editSubmission(submissionId) {
+      if (!ensureSupabaseConfigured()) return;
+      try {
+        const { data } = await supabaseClient.from('submissions').select('*').eq('id', submissionId).single();
+        if (!data) return;
+
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('relationship').value = data.relationship || '';
+        document.getElementById('admireAbout').value = data.admire_about || '';
+        document.getElementById('publicMessage').value = data.public_message || '';
+        document.getElementById('favouriteMemory').value = data.favourite_memory || '';
+        document.getElementById('privateMessage').value = data.private_message || '';
+        document.getElementById('emailAddress').value = data.email || '';
+        document.getElementById('phoneNumber').value = data.phone || '';
+        document.getElementById('contactAllowed').checked = data.contact_allowed || false;
+        document.getElementById('groupUpdatesAllowed').checked = data.group_updates_allowed || false;
+
+        showPage('formPage');
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function submitMemory(e) {
+      e.preventDefault();
+      if (!ensureSupabaseConfigured()) return;
+
+      const name = document.getElementById('name').value.trim();
+      const relationship = document.getElementById('relationship').value;
+      const admireAbout = document.getElementById('admireAbout').value.trim();
+      const publicMessage = document.getElementById('publicMessage').value.trim();
+      const favouriteMemory = document.getElementById('favouriteMemory').value.trim();
+      const privateMessage = document.getElementById('privateMessage').value.trim();
+      const email = document.getElementById('emailAddress').value.trim();
+      const phone = document.getElementById('phoneNumber').value.trim();
+      const contactAllowed = document.getElementById('contactAllowed').checked;
+      const groupUpdatesAllowed = document.getElementById('groupUpdatesAllowed').checked;
+      const photoCaption = document.getElementById('photoCaption').value.trim();
+      const photoCategory = document.getElementById('photoCategory').value;
+
+      if (!name || !publicMessage) {
+        alert('Please fill in required fields');
+        return;
+      }
+
+      try {
+        let publicMediaArray = [];
+        
+        for (const file of selectedMediaFiles) {
+          const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${file.name.split('.').pop()}`;
+          const { error: uploadError } = await supabaseClient.storage.from('public-media').upload(`media/${fileName}`, file);
+          if (uploadError) throw uploadError;
+          
+          publicMediaArray.push({
+            path: `media/${fileName}`,
+            caption: photoCaption,
+            category: photoCategory,
+            type: file.type
+          });
+        }
+
+        const { error } = await supabaseClient.from('submissions').insert([{
+          name, 
+          relationship,
+          admire_about: admireAbout,
+          public_message: publicMessage,
+          favourite_memory: favouriteMemory,
+          private_message: privateMessage, 
+          email, 
+          phone,
+          contact_allowed: contactAllowed,
+          group_updates_allowed: groupUpdatesAllowed,
+          public_media: publicMediaArray.length > 0 ? publicMediaArray : null
+        }]);
+        if (error) throw error;
+
+        document.getElementById('formStatus').innerHTML = statusBox('Memory shared!');
+        clearForm();
+        setTimeout(() => showPage('wallPage'), 1500);
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('formStatus').innerHTML = statusBox(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function loadPrivateVault() {
+      try {
+        if (!ensureSupabaseConfigured()) return;
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        if (!sessionData.session) {
+          document.getElementById('privateList').innerHTML = statusBox('Please sign in first.', 'warning');
+          return;
+        }
+
+        const { data } = await supabaseClient.from('submissions').select('*').order('created_at', { ascending: false });
+        let html = '';
+        if (!data || data.length === 0) {
+          html = '<div class="card">No submissions yet.</div>';
+        } else {
+          data.forEach(item => {
+            html += `<div class="memory">
+              <div class="name">${escapeHtml(item.name)}</div>
+              <div class="meta">${escapeHtml(item.relationship || '')}</div>
+              ${item.private_message ? `<div style="margin-top:10px;padding:10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:8px;"><strong>Private:</strong><br>${escapeHtml(item.private_message)}</div>` : ''}
+              ${item.email ? `<div style="margin-top:8px"><strong>Email:</strong> ${escapeHtml(item.email)}</div>` : ''}
+              ${item.phone ? `<div style="margin-top:4px"><strong>Phone:</strong> ${escapeHtml(item.phone)}</div>` : ''}
+            </div>`;
+          });
+        }
+        document.getElementById('privateList').innerHTML = html;
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    document.getElementById('memoryForm').addEventListener('submit', submitMemory);
+    document.getElementById('signInBtn').addEventListener('click', async () => {
+      const email = document.getElementById('gregEmail').value.trim();
+      const password = document.getElementById('gregPassword').value;
+      if (!email || !password) return;
+      try {
+        if (!ensureSupabaseConfigured()) return;
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        currentGregEmail = email;
+        document.getElementById('loginStatus').innerHTML = statusBox('Signed in!');
+        document.getElementById('gregVaultButton').innerHTML = `<div class="card" style="margin-top:16px"><button class="soft" style="width:100%" onclick="showPage('vaultPage')">Open Private Vault</button></div>`;
+      } catch (error) {
+        document.getElementById('loginStatus').innerHTML = statusBox(`Error: ${error.message}`, 'error');
+      }
+    });
+
+    document.getElementById('signOutBtn').addEventListener('click', async () => {
+      if (ensureSupabaseConfigured()) {
+        await supabaseClient.auth.signOut();
+      }
+      currentGregEmail = null;
+      document.getElementById('gregPassword').value = '';
+      document.getElementById('loginStatus').innerHTML = '';
+      document.getElementById('gregVaultButton').innerHTML = '';
+      showPage('homePage');
+    });
+
+    window.showPage = showPage;
+    window.openPhotoModal = openPhotoModal;
+    window.closePhotoModal = closePhotoModal;
+    window.submitPhotoComment = submitPhotoComment;
+    window.openUploadForm = openUploadForm;
+    window.closeUploadForm = closeUploadForm;
+    window.uploadGregPhoto = uploadGregPhoto;
+    window.searchMyMemories = searchMyMemories;
+    window.editSubmission = editSubmission;
+    window.notifyAdmin = notifyAdmin;
+    window.filterMemories = filterMemories;
+    window.searchMemories = searchMemories;
+    window.toggleReaction = toggleReaction;
+    window.toggleFavorite = toggleFavorite;
+
+    // Initialize everything
+    (async () => {
+      await initStorage();
+      ensureSupabaseConfigured();
+    })();
+  </script>
+</body>
+</html>
